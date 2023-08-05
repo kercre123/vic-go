@@ -1,4 +1,4 @@
-module github.com/kercre123/dtspine
+module github.com/kercre123/vic-go
 
 go 1.19
 

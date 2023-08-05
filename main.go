@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/inancgumus/screen"
-	"github.com/kercre123/dtspine/vbody"
+	"github.com/kercre123/vic-go/vbody"
 )
 
 func main() {
