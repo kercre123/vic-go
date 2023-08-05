@@ -18,3 +18,9 @@ sudo ./download-deps.sh
 (replace vectorip with Vector's actual IP)
 
 That expects the SSH key to be in the user directory (~/ssh_root_key).
+
+The default example takes the touch sensor input. If it's being touched, the bot will raise the lift. If not touched, it will lower the lift.
+
+Full spine communication is implemented, except for the proximity sensor.
+
+Camera, screen, IMU, and speaker are in the works, but not functional yet.
