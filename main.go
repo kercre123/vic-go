@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	TestBodyRXTX()
+	TestBodyRXTXInteractive()
 }
 
 func TestBodyRXTXInteractive() {

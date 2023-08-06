@@ -130,7 +130,6 @@ func Start_Comms_Loop() error {
 			CurrentDataFrame.mu.Lock()
 			ReadFrame()
 			CurrentDataFrame.mu.Unlock()
-			time.Sleep(time.Millisecond * 5)
 		}
 	}()
 	time.Sleep(time.Second)
