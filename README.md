@@ -19,8 +19,18 @@ sudo ./download-deps.sh
 
 That expects the SSH key to be in the user directory (~/ssh_root_key).
 
+If you get an error like `scp: Connection closed`, run ./send.sh with -O like `./send.sh vectorip -O`
+
+Then, to run it, SSH in and do:
+
+```
+systemctl stop anki-robot.target
+/data/vic-go/main
+```
+
 The default example takes the touch sensor input. If it's being touched, the bot will raise the lift. If not touched, it will lower the lift.
 
 Full spine communication is implemented, except for the proximity sensor.
 
 Camera, screen, IMU, and speaker are in the works, but not functional yet.
+

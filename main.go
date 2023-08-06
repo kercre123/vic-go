@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	TestBodyRXTXInteractive()
+	TestBodyRXTX()
 }
 
 func TestBodyRXTXInteractive() {
@@ -19,10 +19,10 @@ func TestBodyRXTXInteractive() {
 	time.Sleep(time.Second * 1)
 	vbody.Set_Motors(0, 0, 0, 0)
 	fmt.Println("\nTouch the touch sensor! (CTRL+C to exit)")
-	frame := vbody.ReadFrame()
+	frame := vbody.GetFrame()
 	origTouch := frame.Touch
 	for {
-		frame = vbody.ReadFrame()
+		frame = vbody.GetFrame()
 		if frame.Touch > origTouch+30 {
 			vbody.Set_Motors(0, 0, -100, 0)
 		} else {
@@ -57,8 +57,8 @@ func TestBodyRXTX() {
 			break
 		}
 		screen.MoveTopLeft()
-		fmt.Println("Touch sensor readout: " + fmt.Sprint(vbody.ReadFrame().Touch))
-		fmt.Println("Prox sensor readout: " + fmt.Sprint(vbody.ReadFrame().ProxMM))
+		fmt.Println("Touch sensor readout: " + fmt.Sprint(vbody.GetFrame().Touch))
+		fmt.Println("Prox sensor readout: " + fmt.Sprint(vbody.GetFrame().ProxMM))
 	}
 	fmt.Println("Closing spine handle")
 	vbody.Close_Spine()
