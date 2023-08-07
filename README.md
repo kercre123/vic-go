@@ -2,7 +2,7 @@
 
 A Go wrapper for [poc.vic-hack](https://github.com/torimos/poc.vic-hack).
 
-Vector installation instructions:
+## Install example program
 
 On a Linux host machine,
 
@@ -15,22 +15,24 @@ sudo ./download-deps.sh
 ./send.sh vectorip
 ```
 
-(replace vectorip with Vector's actual IP)
+-   (replace vectorip with Vector's actual IP)
+-   This expects the SSH key to be in the user directory (~/ssh_root_key).
+-   If you get an error like `scp: Connection closed`, run ./send.sh with -O like `./send.sh vectorip -O`
 
-That expects the SSH key to be in the user directory (~/ssh_root_key).
+-   The compile.sh script should give you a good sense of how you would need to compile your own program.
+    -   A compatible toolchain. Ideally, we would statically compile so we could use the special CPU features of Vector's processor, but this is CGO which makes it difficult. So, we must use a timely toolchain. Newest one that works seems to be Linaro's 5.5.
+        -   Go works perfectly with old toolchains. It just makes it harder to include stuff like GoCV.
+    -   librobot.so must be seperate, as that code is written in C++, and CGO only compiles C code.
 
-If you get an error like `scp: Connection closed`, run ./send.sh with -O like `./send.sh vectorip -O`
+# Running
 
-Then, to run it, SSH in and do:
+SSH into your bot,
 
 ```
 systemctl stop anki-robot.target
 /data/vic-go/main
 ```
 
-The default example takes the touch sensor input. If it's being touched, the bot will raise the lift. If not touched, it will lower the lift.
+The default example will show the camera on the LCD, then do some body functions (recieving and transmitting).
 
-Full spine communication is implemented, except for the proximity sensor.
-
-Camera, screen, IMU, and speaker are in the works, but not functional yet.
 

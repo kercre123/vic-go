@@ -12,9 +12,12 @@ int spine_full_init();
 void close_spine();
 void spine_full_update(uint32_t seq, int16_t* motors_data, uint32_t* leds_data);
 spine_dataframe_t iterate();
-size_t getFrame(uint8_t** buffer);
+size_t getFrame(uint8_t* goBuffer);
+void init_lcd();
+void set_pixels(uint16_t *pixels);
 void cam_init();
 void stop_cam_stream();
+void convert_frame_to_rgb565(uint8_t* frame, uint16_t* buffer, int frameWidth, int frameHeight, int outputWidth, int outputHeight);
 
 #ifdef __cplusplus
 }

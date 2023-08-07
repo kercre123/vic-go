@@ -119,7 +119,6 @@ int lcd_init()
     ioctl(spi, SPI_IOC_WR_MODE, (char *)&mode);
     ioctl(spi, SPI_IOC_WR_BITS_PER_WORD, (char *)&bits);
     ioctl(spi, SPI_IOC_WR_MAX_SPEED_HZ, (char *)&speed);
-    printf("LCD SPI Mode=%04x Bits=%02d Speed=%04d\n",mode,bits,speed);
 
     gpioInit(&dcPin, 110, 1, 1);
 

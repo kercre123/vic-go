@@ -61,6 +61,7 @@ int lib_init(mm_cam_lib_t* handle);
 int mm_camera_app_wait();
 void mm_camera_app_done();
 int mm_camera_app_start(mm_cam_lib_t *lib, uint8_t num_burst, mm_camera_buf_notify_t notify_cb);
+void mm_camera_app_stop(mm_cam_lib_t *lib);
 
 #ifdef __cplusplus
 }

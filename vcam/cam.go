@@ -11,59 +11,46 @@ import (
 	"image"
 	"image/color"
 	"image/jpeg"
-	"os"
 	"time"
 	"unsafe"
 )
+
+var Cam_Initted bool
 
 func InitCam() {
 	go func() {
 		C.cam_init()
 	}()
 	time.Sleep(time.Second * 2)
+	Cam_Initted = true
 }
 
 func StopCam() {
 	C.stop_cam_stream()
+	Cam_Initted = false
 }
 
 func GetFrame() []byte {
-	var cData *C.uint8_t
-	cSize := C.getFrame(&cData)
-
-	if cData == nil {
-		fmt.Println("cdata is nil")
+	if !Cam_Initted {
+		fmt.Println("GetFrame(): you must InitCam first")
 		return nil
 	}
+	data := make([]byte, 1382400) // You need to define MAX_FRAME_SIZE. Ideally, it should be the maximum possible size of a frame.
 
-	// Convert C array to Go slice
-	length := int(cSize)
-	slice := (*[1 << 30]byte)(unsafe.Pointer(cData))[:length:length]
+	// Pass the Go slice to C to be filled
+	cSize := C.getFrame((*C.uint8_t)(&data[0]))
 
-	// Create copy of data to preserve it after C memory is freed
-	data := make([]byte, length)
-	copy(data, slice)
+	// Resize the Go slice to the actual size of the frame
+	data = data[:cSize]
+
 	return data
 }
 
+// slowwwww
 func GetFrameAsJPEG() []byte {
 	width := 1280
 	height := 720
-	var cData *C.uint8_t
-	cSize := C.getFrame(&cData)
-
-	if cData == nil {
-		fmt.Println("cdata is nil")
-		return nil
-	}
-
-	// Convert C array to Go slice
-	length := int(cSize)
-	slice := (*[1 << 30]byte)(unsafe.Pointer(cData))[:length:length]
-
-	// Create copy of data to preserve it after C memory is freed
-	data := make([]byte, length)
-	copy(data, slice)
+	data := GetFrame()
 	img := image.NewYCbCr(image.Rect(0, 0, width, height), image.YCbCrSubsampleRatio420)
 	copy(img.Y, data[:width*height])
 	copy(img.Cb, data[width*height:(width*height)+((width/2)*(height/2))])
@@ -86,33 +73,12 @@ func GetFrameAsJPEG() []byte {
 	return buf.Bytes()
 }
 
-func SaveAsJPEG(data []byte, width int, height int, path string) {
-	// Construct image from the YUV420p data
-	img := image.NewYCbCr(image.Rect(0, 0, width, height), image.YCbCrSubsampleRatio420)
-	copy(img.Y, data[:width*height])
-	copy(img.Cb, data[width*height:(width*height)+((width/2)*(height/2))])
-	copy(img.Cr, data[(width*height)+((width/2)*(height/2)):])
+func ConvertFrameToRGB565(frame []byte, frameWidth, frameHeight, outputWidth, outputHeight int) []uint16 {
+	buffer := make([]uint16, outputWidth*outputHeight)
 
-	// Convert the YCbCr image to RGB since JPEG requires RGB
-	imgRGBA := image.NewRGBA(img.Bounds())
-	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
-		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
-			r, g, b, _ := img.At(x, y).RGBA()
-			col := color.RGBA{uint8(r >> 8), uint8(g >> 8), uint8(b >> 8), 255}
-			imgRGBA.Set(x, y, col)
-		}
-	}
+	C.convert_frame_to_rgb565((*C.uint8_t)(unsafe.Pointer(&frame[0])),
+		(*C.uint16_t)(unsafe.Pointer(&buffer[0])), C.int(frameWidth),
+		C.int(frameHeight), C.int(outputWidth), C.int(outputHeight))
 
-	// Create file
-	outFile, err := os.Create(path)
-	if err != nil {
-		panic(err)
-	}
-	defer outFile.Close()
-
-	// Write image to file
-	err = jpeg.Encode(outFile, imgRGBA, nil)
-	if err != nil {
-		panic(err)
-	}
+	return buffer
 }

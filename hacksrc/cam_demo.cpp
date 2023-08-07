@@ -10,10 +10,9 @@
 pthread_mutex_t frameMutex = PTHREAD_MUTEX_INITIALIZER;
 uint8_t* frameBuffer = NULL;
 size_t frameBufferSize = 0;
+mm_cam_lib_t lib;
 
-#define BUF_SZ 184*96
-uint16_t lcd_buff[BUF_SZ];
-int lcd_spi;
+
 int stop_cam;
 bool writeFrame;
 
@@ -164,6 +163,7 @@ void mm_camera_app_notify_cb2(mm_camera_super_buf_t *bufs, void *user_data)
     frameBuffer = (uint8_t*) malloc(totalLength);
     if (frameBuffer == NULL) {
         pthread_mutex_unlock(&frameMutex);
+        printf("FRAMEBUFFER IS EMPTY");
         return;
     }
 
@@ -182,21 +182,48 @@ void mm_camera_app_notify_cb2(mm_camera_super_buf_t *bufs, void *user_data)
     mm_camera_app_done();
 }
 
-size_t getFrame(uint8_t** buffer) {
+void convert_frame_to_rgb565(uint8_t* frame, uint16_t* buffer, int frameWidth, int frameHeight, int outputWidth, int outputHeight)
+{
+    int uOffset = frameWidth * frameHeight;
+    int vOffset = uOffset + 1;
+    int dx = frameWidth / outputWidth;
+    int dy = frameHeight / outputHeight;
+
+    for(int y = 0; y < frameHeight; y += dy) {
+        for(int x = 0; x < frameWidth; x += dx) {
+            int uvOffset = (y >> 1) * (frameWidth >> 1) + (x >> 1);
+            int cY = frame[y * frameWidth + x];
+            int cU = frame[uOffset + 2 * uvOffset];
+            int cV = frame[vOffset + 2 * uvOffset];
+            int i = x / dx;
+            int j = y / dy;
+            if (i < outputWidth && j < outputHeight) {
+                buffer[j * outputWidth + i] = yuv2rgb(cY, cU, cV);
+            }
+        }
+    }
+}
+
+size_t getFrame(uint8_t* goBuffer) {
     size_t size;
 
-    //pthread_mutex_lock(&frameMutex);
+    pthread_mutex_lock(&frameMutex);
     
-    *buffer = frameBuffer;
-    size = frameBufferSize;
+    if (frameBuffer != NULL && goBuffer != NULL) {
+        memcpy(goBuffer, frameBuffer, frameBufferSize);
+        size = frameBufferSize;
+    } else {
+        size = 0;
+    }
 
-    //pthread_mutex_unlock(&frameMutex);
+    pthread_mutex_unlock(&frameMutex);
 
     return size;
 }
 
 void stop_cam_stream() {
     stop_cam = 1;
+    mm_camera_app_stop(&lib);
 }
 
 void cam_init()
@@ -206,7 +233,6 @@ void cam_init()
     if (!validate()) printf("%s: validation - OK\n", __func__);
     else return;
 
-    mm_cam_lib_t lib;
     GPIO cenPin, sbyPin;
     gpioInit(&cenPin, 83, 1, 1); //poweron
     gpioInit(&sbyPin, 94, 1, 0); //unpause

@@ -6,6 +6,7 @@
 static pthread_mutex_t app_mutex;
 static int thread_status = 0;
 static pthread_cond_t app_cond_v;
+mm_camera_channel_t *global_channel = NULL;
 
 int lib_init(mm_cam_lib_t* lib)
 {
@@ -203,20 +204,40 @@ int mm_camera_app_start(mm_cam_lib_t *lib, uint8_t num_burst, mm_camera_buf_noti
     printf("%s: begin\n", __func__);
     int rc = MM_CAMERA_OK;
     mm_camera_test_obj_t *test_obj = &lib->handle.test_obj;
-    mm_camera_channel_t *channel = mm_camera_app_add_preview_channel(lib, num_burst, notify_cb);
-    if (NULL == channel) {
+    global_channel = mm_camera_app_add_preview_channel(lib, num_burst, notify_cb);
+    if (NULL == global_channel) {
         printf("%s: ERROR. add channel failed\n", __func__);
         return -MM_CAMERA_E_GENERAL;
     }
     printf("%s: mm_camera_app_add_rdi_channel: ok\n", __func__);
 
-    rc = lib->mm_app_start_channel(test_obj, channel);
+    rc = lib->mm_app_start_channel(test_obj, global_channel);
     if (MM_CAMERA_OK != rc) {
         printf("%s: ERROR. start rdi failed rc=%d\n", __func__, rc);
-        lib->mm_app_del_channel(test_obj, channel);
+        lib->mm_app_del_channel(test_obj, global_channel);
         return rc;
     }
     printf("%s: mm_app_start_channel: ok\n", __func__);
 
     return rc;
+}
+
+void mm_camera_app_stop(mm_cam_lib_t *lib) {
+    printf("%s: begin\n", __func__);
+
+    mm_camera_test_obj_t *test_obj = &lib->handle.test_obj;
+
+    // Stop the camera channel first
+    int rc = lib->mm_app_stop_channel(test_obj, global_channel);
+    if (MM_CAMERA_OK != rc) {
+        printf("%s: ERROR. stop channel failed rc=%d\n", __func__, rc);
+    }
+
+    // Clean up the channel and associated resources
+    rc = lib->mm_app_del_channel(test_obj, global_channel);
+    if (MM_CAMERA_OK != rc) {
+        printf("%s: ERROR. delete channel failed rc=%d\n", __func__, rc);
+    }
+
+    printf("%s: mm_app_stop_channel: ok\n", __func__);
 }

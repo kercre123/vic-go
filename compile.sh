@@ -16,16 +16,23 @@ mkdir -p build
 
 ABSPATH="${PWD}"
 
+export LD_LIBRARY_PATH=$ABSPATH/toolchain/lib:$ABSPATH/toolchain/arm-linux-gnueabi/libc/usr/lib:$ABSPATH/toolchain/arm-linux-gnueabi/libc/lib/
+
 $ABSPATH/toolchain/bin/arm-linux-gnueabi-g++ \
 -w -shared \
 -o build/librobot.so \
 hacksrc/libs/spine.cpp \
 hacksrc/spine_demo.cpp \
 hacksrc/libs/utils.cpp \
+hacksrc/libs/lcd.cpp \
+hacksrc/lcd_demo.cpp \
+hacksrc/libs/cam.cpp \
+hacksrc/cam_demo.cpp \
 -Iinclude -fPIC
 
 CC="$ABSPATH/toolchain/bin/arm-linux-gnueabi-gcc -w -Lbuild" \
-CFLAGS="-Iinclude -fPIC -Lbuild" \
+CFLAGS="-Iinclude" \
+CGO_LDFLAGS="-ldl" \
 GOARM=7 \
 GOARCH=arm \
 CGO_ENABLED=1 \

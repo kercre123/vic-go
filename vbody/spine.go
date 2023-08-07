@@ -36,10 +36,25 @@ type DataFrame struct {
 	BattVoltage    int16
 	ChargerVoltage int16
 	BodyTemp       int16
-	ProxMM         uint16
 	Touch          uint16
 	ButtonState    bool
 	MicData        []int16
+	// uint8_t prox_sigma_mm;
+	// uint16_t prox_raw_range_mm;
+	// uint16_t prox_signal_rate_mcps;
+	// uint16_t prox_ambient;
+	// uint16_t prox_SPAD_count;
+	// uint16_t prox_sample_count;
+	// uint32_t prox_calibration_result;
+	ProxSigmaMM        uint8
+	ProxRawRangeMM     uint16
+	ProxSignalRateMCPS uint16
+	ProxAmbient        uint16
+	ProxSPADCount      uint16
+	ProxSampleCount    uint16
+	ProxCalibResult    uint32
+	ProxRealMM         uint16
+	Test               float64
 }
 
 var Spine_Handle int
@@ -188,12 +203,18 @@ typedef struct {
 */
 
 func GetFrame() *DataFrame {
+	if !Spine_Initiated {
+		fmt.Println("GetFrame(): you must initialize spine first")
+	}
 	CurrentDataFrame.mu.Lock()
 	defer CurrentDataFrame.mu.Unlock()
 	return &CurrentDataFrame
 }
 
-func ReadFrame() {
+func ReadFrame() error {
+	if !Spine_Initiated {
+		return errors.New("must init spine")
+	}
 	df := C.iterate()
 	CurrentDataFrame.Seq = uint32(df.seq)
 	goms := MotorStatus{}
@@ -208,8 +229,26 @@ func ReadFrame() {
 	CurrentDataFrame.BattVoltage = int16(df.battery_voltage)
 	CurrentDataFrame.ChargerVoltage = int16(df.charger_voltage)
 	CurrentDataFrame.BodyTemp = int16(df.body_temp)
-	CurrentDataFrame.ProxMM = uint16(df.prox_raw_range_mm)
+	CurrentDataFrame.ProxRawRangeMM = uint16(df.prox_raw_range_mm)
 	CurrentDataFrame.Touch = uint16(df.touch_sensor)
+	/*
+			    uint8_t prox_sigma_mm;
+		    uint16_t prox_raw_range_mm;
+		    uint16_t prox_signal_rate_mcps;
+		    uint16_t prox_ambient;
+		    uint16_t prox_SPAD_count;
+		    uint16_t prox_sample_count;
+		    uint32_t prox_calibration_result;
+	*/
+	CurrentDataFrame.ProxSigmaMM = uint8(df.prox_sigma_mm)
+	CurrentDataFrame.ProxRawRangeMM = uint16(df.prox_raw_range_mm)
+	CurrentDataFrame.ProxSignalRateMCPS = uint16(df.prox_signal_rate_mcps)
+	CurrentDataFrame.ProxAmbient = uint16(df.prox_ambient)
+	CurrentDataFrame.ProxSPADCount = uint16(df.prox_SPAD_count)
+	CurrentDataFrame.ProxSampleCount = uint16(df.prox_sample_count)
+	CurrentDataFrame.ProxCalibResult = uint32(df.prox_calibration_result)
+	//CurrentDataFrame.ProxRealMM = uint16(float64(CurrentDataFrame.ProxRawRangeMM) * (float64(CurrentDataFrame.ProxSignalRateMCPS) / float64(CurrentDataFrame.ProxAmbient)))
+	CurrentDataFrame.Test = float64(CurrentDataFrame.ProxSignalRateMCPS) / float64(CurrentDataFrame.ProxSPADCount)
 	switch {
 	case df.buttton_state > 0:
 		CurrentDataFrame.ButtonState = true
@@ -219,4 +258,5 @@ func ReadFrame() {
 	for _, data := range df.mic_data {
 		CurrentDataFrame.MicData = append(CurrentDataFrame.MicData, int16(data))
 	}
+	return nil
 }
