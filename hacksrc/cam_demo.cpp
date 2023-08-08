@@ -5,6 +5,8 @@
 #include <unistd.h> // for write() and close()
 #include <dlfcn.h>
 #include <pthread.h>
+#include <stdint.h>
+#include <arm_neon.h>
 
 // Define mutex and buffer globally
 pthread_mutex_t frameMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -226,7 +228,7 @@ void stop_cam_stream() {
     mm_camera_app_stop(&lib);
 }
 
-void cam_init()
+void cam_init(int newWidth, int newHeight)
 {
 
     //printf("%s: camera test\n", __func__);
@@ -240,7 +242,7 @@ void cam_init()
 
     if (!lib_init(&lib))
     {
-        int rc = mm_camera_app_start(&lib, 0, mm_camera_app_notify_cb2);
+        int rc = mm_camera_app_start(&lib, 0, mm_camera_app_notify_cb2, newWidth, newHeight);
         if (!rc)
         {
             stop_cam = 0;
@@ -255,3 +257,44 @@ void cam_init()
         }
     }
 }
+
+inline int clamp(int value, int min, int max) {
+    return value < min ? min : (value > max ? max : value);
+}
+
+void convert_resize_yuv_to_rgba(uint8_t* data, uint8_t* rgba_data, int width, int height, int newWidth, int newHeight) {
+    int size = width * height;
+    int chromaSize = size / 4;
+
+    uint8_t* Y = data;
+    uint8_t* Cb = data + size;
+    uint8_t* Cr = Cb + chromaSize;
+
+    float x_ratio = (float)width / (float)newWidth;
+    float y_ratio = (float)height / (float)newHeight;
+
+    for(int y = 0; y < newHeight; y++) {
+        int srcY = (int)(y * y_ratio);
+        for(int x = 0; x < newWidth; x++) {
+            int srcX = (int)(x * x_ratio);
+
+            uint8_t yy = Y[srcY * width + srcX];
+            uint8_t cb = Cb[(srcY / 2) * (width / 2) + (srcX / 2)];
+            uint8_t cr = Cr[(srcY / 2) * (width / 2) + (srcX / 2)];
+
+            int r = yy + 1.402 * (cr - 128);
+            int g = yy - 0.344136 * (cb - 128) - 0.714136 * (cr - 128);
+            int b = yy + 1.772 * (cb - 128);
+
+
+            int destIdx = 4 * (y * newWidth + x);
+
+            rgba_data[destIdx] = (uint8_t)clamp(r, 0, 255);
+            rgba_data[destIdx + 1] = (uint8_t)clamp(g, 0, 255);
+            rgba_data[destIdx + 2] = (uint8_t)clamp(b, 0, 255);
+            rgba_data[destIdx + 3] = 255;
+        }
+    }
+}
+
+

@@ -1,6 +1,6 @@
 package vcam
 
-// #cgo LDFLAGS: -L${SRCDIR}/.. -lrobot
+// #cgo LDFLAGS: -L${SRCDIR}/../build -lrobot
 // #cgo CFLAGS: -I${SRCDIR}/../include
 // #include "librobot.h"
 // #include <dlfcn.h>
@@ -17,11 +17,17 @@ import (
 
 var Cam_Initted bool
 
-func InitCam() {
+var width int
+var height int
+
+// w = desired width, h = desired height
+func InitCam(w, h int) {
+	width = w
+	height = h
 	go func() {
-		C.cam_init()
+		C.cam_init(C.int(width), C.int(height))
 	}()
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second)
 	Cam_Initted = true
 }
 
@@ -35,12 +41,8 @@ func GetFrame() []byte {
 		fmt.Println("GetFrame(): you must InitCam first")
 		return nil
 	}
-	data := make([]byte, 1382400) // You need to define MAX_FRAME_SIZE. Ideally, it should be the maximum possible size of a frame.
-
-	// Pass the Go slice to C to be filled
+	data := make([]byte, 1382400)
 	cSize := C.getFrame((*C.uint8_t)(&data[0]))
-
-	// Resize the Go slice to the actual size of the frame
 	data = data[:cSize]
 
 	return data
@@ -48,15 +50,11 @@ func GetFrame() []byte {
 
 // slowwwww
 func GetFrameAsJPEG() []byte {
-	width := 1280
-	height := 720
 	data := GetFrame()
 	img := image.NewYCbCr(image.Rect(0, 0, width, height), image.YCbCrSubsampleRatio420)
 	copy(img.Y, data[:width*height])
 	copy(img.Cb, data[width*height:(width*height)+((width/2)*(height/2))])
 	copy(img.Cr, data[(width*height)+((width/2)*(height/2)):])
-
-	// Convert the YCbCr image to RGB since JPEG requires RGB
 	imgRGBA := image.NewRGBA(img.Bounds())
 	for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
 		for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
@@ -81,4 +79,19 @@ func ConvertFrameToRGB565(frame []byte, frameWidth, frameHeight, outputWidth, ou
 		C.int(frameHeight), C.int(outputWidth), C.int(outputHeight))
 
 	return buffer
+}
+
+func CamFrameToImage(data []byte, width int, height int, newWidth int, newHeight int) *image.RGBA {
+
+	rgbaData := make([]byte, newWidth*newHeight*4)
+	fmt.Println("c init")
+	C.convert_resize_yuv_to_rgba((*C.uint8_t)(unsafe.Pointer(&data[0])), (*C.uint8_t)(unsafe.Pointer(&rgbaData[0])), C.int(width), C.int(height), C.int(newWidth), C.int(newHeight))
+	fmt.Println("c done. imaging...")
+	img := &image.RGBA{
+		Pix:    rgbaData,
+		Stride: 4 * newWidth,
+		Rect:   image.Rect(0, 0, newWidth, newHeight),
+	}
+	fmt.Println("go done")
+	return img
 }

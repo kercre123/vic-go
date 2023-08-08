@@ -62,13 +62,13 @@ func TestBodyRXTX() {
 func CamOnScreen() {
 	fmt.Println("Initiating LCD and cam")
 	vscreen.InitLCD()
-	vcam.InitCam()
+	vcam.InitCam(640, 480)
 	fmt.Println("")
 	i := 0
 	for i < 300 {
 		i = i + 1
 		fmt.Printf("\r" + fmt.Sprint(i))
-		vscreen.SetScreen(vcam.ConvertFrameToRGB565(vcam.GetFrame(), 1280, 720, 184, 96))
+		vscreen.SetScreen(vcam.ConvertFrameToRGB565(vcam.GetFrame(), 640, 480, 184, 96))
 		time.Sleep(time.Millisecond * (1000 / 30))
 	}
 	fmt.Printf("\n\nCleaning up, stopping camera stream...\n")

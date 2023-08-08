@@ -7,6 +7,8 @@ static pthread_mutex_t app_mutex;
 static int thread_status = 0;
 static pthread_cond_t app_cond_v;
 mm_camera_channel_t *global_channel = NULL;
+int width = 1280;
+int height = 720;
 
 int lib_init(mm_cam_lib_t* lib)
 {
@@ -108,8 +110,8 @@ mm_camera_channel_t * mm_camera_app_add_preview_channel(mm_cam_lib_t *lib, uint8
     stream->s_config.stream_info->stream_type = CAM_STREAM_TYPE_PREVIEW;
     stream->s_config.stream_info->fmt = CAM_FORMAT_YUV_420_NV21;
 
-    stream->s_config.stream_info->dim.width = 1280;
-    stream->s_config.stream_info->dim.height = 720;
+    stream->s_config.stream_info->dim.width = width;
+    stream->s_config.stream_info->dim.height = height;
     stream->s_config.padding_info.width_padding =
         stream->s_config.padding_info.height_padding =
             stream->s_config.padding_info.plane_padding = 32;
@@ -175,8 +177,8 @@ mm_camera_channel_t * mm_camera_app_add_rdi_channel(mm_cam_lib_t *lib, uint8_t n
     stream->s_config.stream_info->fmt = CAM_FORMAT_BAYER_MIPI_RAW_10BPP_BGGR;
     stream->s_config.stream_info->stream_type = CAM_STREAM_TYPE_RAW;
 
-    stream->s_config.stream_info->dim.width = 1280;
-    stream->s_config.stream_info->dim.height = 720;
+    stream->s_config.stream_info->dim.width = width;
+    stream->s_config.stream_info->dim.height = height;
     stream->s_config.padding_info.width_padding =
         stream->s_config.padding_info.height_padding =
             stream->s_config.padding_info.plane_padding = 0;
@@ -199,8 +201,10 @@ mm_camera_channel_t * mm_camera_app_add_rdi_channel(mm_cam_lib_t *lib, uint8_t n
     return channel;
 }
 
-int mm_camera_app_start(mm_cam_lib_t *lib, uint8_t num_burst, mm_camera_buf_notify_t notify_cb)
+int mm_camera_app_start(mm_cam_lib_t *lib, uint8_t num_burst, mm_camera_buf_notify_t notify_cb, int newWidth, int newHeight)
 {
+    width = newWidth;
+    height = newHeight;
     printf("%s: begin\n", __func__);
     int rc = MM_CAMERA_OK;
     mm_camera_test_obj_t *test_obj = &lib->handle.test_obj;

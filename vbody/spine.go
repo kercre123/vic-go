@@ -155,9 +155,10 @@ func Start_Comms_Loop() error {
 // rwheel, lwheel, lift, head
 func Set_Motors(m1 int16, m2 int16, m3 int16, m4 int16) error {
 	// back: 	vbody.Set_Motors(500, -500, -500, 0)
-	m1 = -(m1)
-	m3 = -(m3)
-	m4 = -(m4)
+	// m1 = -(m1)
+	// m3 = -(m3)
+	// m4 = -(m4)
+	m2 = -(m2)
 	if !Spine_Initiated {
 		return errors.New("initiate spine first")
 	}

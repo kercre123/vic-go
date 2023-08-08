@@ -1,0 +1,10 @@
+prefix=/home/kerigan/vic-go/libjpeg-turbo
+exec_prefix=/home/kerigan/vic-go/libjpeg-turbo
+libdir=/home/kerigan/vic-go/libjpeg-turbo/lib
+includedir=/home/kerigan/vic-go/libjpeg-turbo/include
+
+Name: libjpeg
+Description: A SIMD-accelerated JPEG codec that provides the libjpeg API
+Version: 3.0.0
+Libs: -L${libdir} -ljpeg
+Cflags: -I${includedir}

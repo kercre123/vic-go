@@ -15,9 +15,11 @@ spine_dataframe_t iterate();
 size_t getFrame(uint8_t* goBuffer);
 void init_lcd();
 void set_pixels(uint16_t *pixels);
-void cam_init();
+void cam_init(int newWidth, int newHeight);
 void stop_cam_stream();
 void convert_frame_to_rgb565(uint8_t* frame, uint16_t* buffer, int frameWidth, int frameHeight, int outputWidth, int outputHeight);
+void convert_resize_yuv_to_rgba(uint8_t* yuv_data, uint8_t* rgba_data, int width, int height, int newWidth, int newHeight);
+
 
 #ifdef __cplusplus
 }

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Anki Vector Remote Control</title>
+</head>
+<body>
+	<h1>Anki Vector Remote Control</h1>
+	<p>Controls:</p>
+	<ul>
+		<li>W/A/S/D: Move wheels</li>
+		<li>R/F: Control head</li>
+		<li>T/G: Control lift</li>
+	</ul>
+	<img src="/stream" alt="MJPEG Stream">
+    <script>
+        const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(wsProtocol + '//' + location.host + '/ws');
+        const controls = {
+            "motors": {
+                "head": 0,
+                "lift": 0,
+                "rwheel": 0,
+                "lwheel": 0
+            }
+        };
+        const keysHeld = {};
+    
+        function updateControl(key, value) {
+            switch (key) {
+                case 'w':
+                    controls.motors.rwheel = value;
+                    controls.motors.lwheel = value;
+                    break;
+                case 'a':
+                    controls.motors.rwheel = -value;
+                    controls.motors.lwheel = value;
+                    break;
+                case 's':
+                    controls.motors.rwheel = -value;
+                    controls.motors.lwheel = -value;
+                    break;
+                case 'd':
+                    controls.motors.rwheel = value;
+                    controls.motors.lwheel = -value;
+                    break;
+                case 'r':
+                    controls.motors.head = value;
+                    break;
+                case 'f':
+                    controls.motors.head = -value;
+                    break;
+                case 't':
+                    controls.motors.lift = value;
+                    break;
+                case 'g':
+                    controls.motors.lift = -value;
+                    break;
+            }
+        }
+    
+        function handleKey() {
+            let changed = false;
+            for (const key in keysHeld) {
+                if (keysHeld[key]) {
+                    const value = event.shiftKey ? 2 : 1;
+                    if (controls.motors[key] !== value) {
+                        updateControl(key, value);
+                        changed = true;
+                    }
+                }
+            }
+            if (changed) {
+                ws.send(JSON.stringify(controls));
+            }
+        }
+    
+        document.addEventListener('keydown', function(event) {
+            if (event.key.toLowerCase() in keysHeld && !keysHeld[event.key.toLowerCase()]) {
+                keysHeld[event.key.toLowerCase()] = true;
+                handleKey();
+            }
+        });
+    
+        document.addEventListener('keyup', function(event) {
+            if (event.key.toLowerCase() in keysHeld) {
+                keysHeld[event.key.toLowerCase()] = false;
+                updateControl(event.key.toLowerCase(), 0);
+                ws.send(JSON.stringify(controls));
+            }
+        });
+    
+        keysHeld.w = false;
+        keysHeld.a = false;
+        keysHeld.s = false;
+        keysHeld.d = false;
+        keysHeld.r = false;
+        keysHeld.f = false;
+        keysHeld.t = false;
+        keysHeld.g = false;
+    
+        document.addEventListener('keydown', handleKey, { key: 'Shift' });
+        document.addEventListener('keyup', handleKey, { key: 'Shift' });
+    </script>
+</body>
+</html>
