@@ -25,7 +25,7 @@ type MotorRequest struct {
 var (
 	width   = 640
 	height  = 480
-	quality = 100
+	quality = 50
 )
 
 func mjpegStream(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +36,7 @@ func mjpegStream(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "--frame\r\nContent-Type: image/jpeg\r\nContent-Length: %d\r\n\r\n", len(jpegData))
 		w.Write(jpegData)
 		w.Write([]byte("\r\n"))
-		time.Sleep(time.Second / 30)
+		//time.Sleep(time.Second / 30)
 	}
 }
 
