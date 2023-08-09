@@ -33,10 +33,22 @@ func mjpegStream(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		jpegData := vjpeg.EncodeToJPEG(vcam.GetFrame(), quality, width, height)
-		fmt.Fprintf(w, "--frame\r\nContent-Type: image/jpeg\r\nContent-Length: %d\r\n\r\n", len(jpegData))
-		w.Write(jpegData)
-		w.Write([]byte("\r\n"))
-		//time.Sleep(time.Second / 30)
+		_, err := fmt.Fprintf(w, "--frame\r\nContent-Type: image/jpeg\r\nContent-Length: %d\r\n\r\n", len(jpegData))
+		if err != nil {
+			fmt.Println("stopping mjpeg stream: " + err.Error())
+			break
+		}
+		_, err = w.Write(jpegData)
+		if err != nil {
+			fmt.Println("stopping mjpeg stream: " + err.Error())
+			break
+		}
+		_, err = w.Write([]byte("\r\n"))
+		if err != nil {
+			fmt.Println("stopping mjpeg stream: " + err.Error())
+			break
+		}
+		//time.Sleep(time.Second / 40)
 	}
 }
 

@@ -14,6 +14,9 @@ if [[ -f ./build/libjpeg_interface.so ]]; then
 	scp $2 -i ~/ssh_root_key build/libjpeg_interface.so root@$1:/lib/
 	scp $2 -i ~/ssh_root_key libjpeg-turbo/lib/libturbojpeg.so.0 root@$1:/lib/
 fi
+if [[ -f ./build/libanki-camera.so ]]; then
+	scp $2 -i ~/ssh_root_key build/libanki-camera.so root@$1:/lib/
+fi
 
 if [[ $SEND_WEBROOT ]]; then
 	scp $2 -i ~/ssh_root_key -r rc/webroot root@$1:/data/vic-go/

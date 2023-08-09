@@ -48,6 +48,12 @@ func ToFile() {
 	os.WriteFile("/tmp/test.jpg", jpegData, 0777)
 }
 
+func JustDump() {
+	vcam.InitCam(1280, 720)
+	frame := vcam.GetFrame()
+	os.WriteFile("/tmp/test.raw", frame, 0777)
+}
+
 func main() {
-	BeginServer()
+	JustDump()
 }

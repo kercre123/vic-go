@@ -108,6 +108,7 @@ mm_camera_channel_t * mm_camera_app_add_preview_channel(mm_cam_lib_t *lib, uint8
     memset(stream->s_config.stream_info, 0, sizeof(cam_stream_info_t));
 
     stream->s_config.stream_info->stream_type = CAM_STREAM_TYPE_PREVIEW;
+    //stream->s_config.stream_info->fmt = CAM_FORMAT_YUV_420_NV21;
     stream->s_config.stream_info->fmt = CAM_FORMAT_YUV_420_NV21;
 
     stream->s_config.stream_info->dim.width = width;

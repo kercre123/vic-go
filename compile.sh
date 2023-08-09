@@ -51,6 +51,20 @@ hacksrc/jpeg.cpp \
 -Ilibjpeg-turbo/include
 fi
 
+if [[ $COMPILE_ANKI_CAMERA ]]; then
+./toolchain/bin/arm-linux-gnueabi-gcc \
+-shared \
+-o build/libanki-camera.so \
+anki/platform/camera/vicos/camera_client/camera_client.c \
+anki/platform/gpio/gpio.c \
+anki/platform/camera/vicos/camera_client/log.c \
+-I anki/platform/camera/vicos/camera_client/ \
+-I anki/platform/camera/vicos/camera_client/inc \
+-I anki \
+-I anki/platform/gpio/inc \
+-fPIC -lpthread
+fi
+
 CC="${TOOLCHAIN}gcc -w -Lbuild" \
 CGO_CFLAGS="-Iinclude -O3 -mfpu=neon-vfpv4 -mfloat-abi=softfp -mcpu=cortex-a7 -ffast-math -flto -Ilibjpeg-turbo/include" \
 CGO_LDFLAGS="-ldl" \
