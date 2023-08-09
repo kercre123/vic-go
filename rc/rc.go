@@ -24,8 +24,8 @@ type MotorRequest struct {
 
 var (
 	width   = 640
-	height  = 480
-	quality = 50
+	height  = 360
+	quality = 70
 )
 
 func mjpegStream(w http.ResponseWriter, r *http.Request) {
