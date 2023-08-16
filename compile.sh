@@ -38,7 +38,8 @@ hacksrc/cam_demo.cpp \
 -Iinclude -fPIC \
 -O3 -mfpu=neon-vfpv4 -mfloat-abi=softfp \
 -mcpu=cortex-a7 -flto -ffast-math \
--Ilibjpeg-turbo/include
+-Ilibjpeg-turbo/include \
+-std=c++11
 
 if [[ $COMPILE_WITH_JPEG ]]; then
 ${TOOLCHAIN}g++ \
@@ -48,7 +49,8 @@ hacksrc/jpeg.cpp \
 -Iinclude -fPIC \
 -O3 -mfpu=neon-vfpv4 -mfloat-abi=softfp \
 -mcpu=cortex-a7 -flto -ffast-math \
--Ilibjpeg-turbo/include
+-std=c++11 -Ilibjpeg-turbo/include -fopenmp
+
 fi
 
 if [[ $COMPILE_ANKI_CAMERA ]]; then
@@ -62,7 +64,8 @@ anki/platform/camera/vicos/camera_client/log.c \
 -I anki/platform/camera/vicos/camera_client/inc \
 -I anki \
 -I anki/platform/gpio/inc \
--fPIC -lpthread
+-fPIC -lpthread \
+-O3 -flto -ffast-math -mfpu=neon-vfpv4 -mfloat-abi=softfp
 fi
 
 CC="${TOOLCHAIN}gcc -w -Lbuild" \

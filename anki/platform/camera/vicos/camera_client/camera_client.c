@@ -1046,12 +1046,12 @@ int camera_frame_acquire(struct anki_camera_handle *camera,
     goto UNLOCK;
   }
 
-  if(frame->timestamp == 0)
-  {
-    printf("%s: %u has zero timestamp", __func__, slot);
-    rc = -1;
-    goto UNLOCK;
-  }
+  // if(frame->timestamp == 0)
+  // {
+  //   //printf("%s: %u has zero timestamp", __func__, slot);
+  //   rc = -1;
+  //   goto UNLOCK;
+  // }
 
   CAMERA_HANDLE_P(camera)->current_frame_id = frame->frame_id;
   CAMERA_HANDLE_P(camera)->last_frame_slot = slot;

@@ -107,9 +107,10 @@ mm_camera_channel_t * mm_camera_app_add_preview_channel(mm_cam_lib_t *lib, uint8
     stream->s_config.stream_info = (cam_stream_info_t *)stream->s_info_buf.buf.buffer;
     memset(stream->s_config.stream_info, 0, sizeof(cam_stream_info_t));
 
-    stream->s_config.stream_info->stream_type = CAM_STREAM_TYPE_PREVIEW;
+    stream->s_config.stream_info->stream_type = CAM_STREAM_TYPE_RAW;
     //stream->s_config.stream_info->fmt = CAM_FORMAT_YUV_420_NV21;
-    stream->s_config.stream_info->fmt = CAM_FORMAT_YUV_420_NV21;
+    //stream->s_config.stream_info->fmt = CAM_FORMAT_BAYER_IDEAL_RAW_MIPI_10BPP_BGGR;
+    stream->s_config.stream_info->fmt = CAM_FORMAT_BAYER_MIPI_RAW_10BPP_BGGR;
 
     stream->s_config.stream_info->dim.width = width;
     stream->s_config.stream_info->dim.height = height;
@@ -201,6 +202,7 @@ mm_camera_channel_t * mm_camera_app_add_rdi_channel(mm_cam_lib_t *lib, uint8_t n
     printf("%s: mm_app_config_stream: ok\n", __func__);
     return channel;
 }
+
 
 int mm_camera_app_start(mm_cam_lib_t *lib, uint8_t num_burst, mm_camera_buf_notify_t notify_cb, int newWidth, int newHeight)
 {

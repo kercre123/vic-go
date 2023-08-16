@@ -9,9 +9,8 @@
 extern "C" {
 #endif
 
-
 void encodeToJPEG(unsigned char* yuvData, int width, int height, int quality, unsigned char** jpegBuf, unsigned long* jpegSize);
-void loadLibTurboJpeg();
+void GetFrameAsJPEGDownSampled(const uint8_t* rawData, int width, int height, int quality, uint8_t** jpegBuf, unsigned long* jpegSize);
 
 
 #ifdef __cplusplus

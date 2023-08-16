@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/kercre123/vic-go/vbody"
-	"github.com/kercre123/vic-go/vcam"
+	vcam "github.com/kercre123/vic-go/vcamnew"
 	"github.com/kercre123/vic-go/vjpeg"
 )
 
@@ -23,16 +23,18 @@ type MotorRequest struct {
 }
 
 var (
-	width   = 640
-	height  = 360
-	quality = 70
+	// resolution determined by which function you use
+	// vjpeg.RGGB10ToJPEGDownSample does 640x360
+	// (soon to be) vjpeg.RGGB10ToJPEGBilinear will do 1280x720
+	quality = 50
 )
 
 func mjpegStream(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "multipart/x-mixed-replace; boundary=frame")
 
 	for {
-		jpegData := vjpeg.EncodeToJPEG(vcam.GetFrame(), quality, width, height)
+		jpegData := vjpeg.RGGB10ToJPEGDownSample(vcam.GetFrame(), quality)
+		//jpegData := vjpeg.EncodeToJPEG(vcam.GetFrame(), quality, 1280, 720)
 		_, err := fmt.Fprintf(w, "--frame\r\nContent-Type: image/jpeg\r\nContent-Length: %d\r\n\r\n", len(jpegData))
 		if err != nil {
 			fmt.Println("stopping mjpeg stream: " + err.Error())
@@ -48,7 +50,7 @@ func mjpegStream(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("stopping mjpeg stream: " + err.Error())
 			break
 		}
-		//time.Sleep(time.Second / 40)
+		time.Sleep(time.Second / 30)
 	}
 }
 
@@ -98,31 +100,36 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func exposuretest(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/set_cam" {
+		expF := r.FormValue("exp")
+		gainF := r.FormValue("gain")
+		exp, _ := strconv.Atoi(expF)
+		gain, _ := strconv.ParseFloat(gainF, 64)
+		vcam.SetExposure(uint16(exp), gain)
+		fmt.Fprint(w, "success!!!!")
+	} else if r.URL.Path == "/exptest" {
+		val, val2 := vcam.AutoExposure(vcam.GetFrame())
+		time.Sleep(time.Millisecond * 100)
+		fmt.Println(val, val2)
+		fmt.Fprint(w, "")
+	}
+}
+
 func BeginServer() {
 	vbody.Init_Spine()
 	fmt.Println("Lowering head and lift")
 	vbody.Set_Motors(0, 0, -100, -100)
 	time.Sleep(time.Second * 2)
 	vbody.Set_Motors(0, 0, 0, 0)
-	vjpeg.Init()
-	vcam.InitCam(width, height)
-	fmt.Println(len(vcam.GetFrame()))
+	vcam.InitCam()
 	http.HandleFunc("/ws", handler)
 	http.Handle("/", http.FileServer(http.Dir("./webroot")))
+	http.HandleFunc("/set_cam", exposuretest)
+	http.HandleFunc("/exptest", exposuretest)
 	http.HandleFunc("/stream", mjpegStream)
 	fmt.Println("listening at port 8888")
 	http.ListenAndServe(":8888", nil)
-}
-
-// for debugging
-func ToFile() {
-	vjpeg.Init()
-	vcam.InitCam(width, height)
-	frame := vcam.GetFrame()
-	fmt.Println(len(frame))
-	jpegData := vjpeg.EncodeToJPEG(vcam.GetFrame(), quality, width, height)
-	fmt.Println(len(jpegData))
-	os.WriteFile("/tmp/test.jpg", jpegData, 0777)
 }
 
 func main() {

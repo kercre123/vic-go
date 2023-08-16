@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/kercre123/vic-go/vcam"
+	"github.com/kercre123/vic-go/vcamnew"
 	"github.com/kercre123/vic-go/vjpeg"
 )
 
@@ -29,7 +30,6 @@ func mjpegStream(w http.ResponseWriter, r *http.Request) {
 }
 
 func BeginServer() {
-	vjpeg.Init()
 	vcam.InitCam(width, height)
 	fmt.Println(len(vcam.GetFrame()))
 	http.HandleFunc("/stream", mjpegStream)
@@ -39,7 +39,6 @@ func BeginServer() {
 
 // for debugging
 func ToFile() {
-	vjpeg.Init()
 	vcam.InitCam(width, height)
 	frame := vcam.GetFrame()
 	fmt.Println(len(frame))
@@ -48,12 +47,6 @@ func ToFile() {
 	os.WriteFile("/tmp/test.jpg", jpegData, 0777)
 }
 
-func JustDump() {
-	vcam.InitCam(1280, 720)
-	frame := vcam.GetFrame()
-	os.WriteFile("/tmp/test.raw", frame, 0777)
-}
-
 func main() {
-	JustDump()
+	vcamnew.TestDump()
 }

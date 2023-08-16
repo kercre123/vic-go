@@ -76,9 +76,16 @@ func Init_Spine() int {
 	handle := C.spine_full_init()
 	if handle > 0 {
 		Spine_Initiated = true
-		Start_Comms_Loop()
+		err := Start_Comms_Loop()
+		if err != nil {
+			fmt.Println("error initializing spine. is vic-robot still alive?")
+			Spine_Initiated = false
+			panic(err)
+		}
 	} else {
 		Spine_Initiated = false
+		fmt.Println("error initializing spine. is vic-robot still alive?")
+		panic(errors.New("spine handle is 0"))
 	}
 	return int(handle)
 }
@@ -106,7 +113,7 @@ func Start_Comms_Loop() error {
 	}
 
 	// check if body is responding
-	// read 10 frames, make sure touch sensor is
+	// read 10 frames, make sure touch sensor is providing valid data
 	for i := 0; i <= 10; i++ {
 		if !Spine_Initiated {
 			return errors.New("spine became uninitialized during comms loop start")
@@ -133,7 +140,9 @@ func Start_Comms_Loop() error {
 			}
 			var motors []int16 = []int16{Motor_1, Motor_2, Motor_3, Motor_4}
 			var leds []uint32 = []uint32{BackLEDStatus, MiddleLEDStatus, FrontLEDStatus, FrontLEDStatus}
+			CurrentDataFrame.mu.Lock()
 			C.spine_full_update(C.uint32_t(8888), (*C.int16_t)(&motors[0]), (*C.uint32_t)(&leds[0]))
+			CurrentDataFrame.mu.Unlock()
 			time.Sleep(time.Millisecond * 10)
 		}
 	}()

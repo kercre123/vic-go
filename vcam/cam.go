@@ -80,18 +80,3 @@ func ConvertFrameToRGB565(frame []byte, frameWidth, frameHeight, outputWidth, ou
 
 	return buffer
 }
-
-func CamFrameToImage(data []byte, width int, height int, newWidth int, newHeight int) *image.RGBA {
-
-	rgbaData := make([]byte, newWidth*newHeight*4)
-	fmt.Println("c init")
-	C.convert_resize_yuv_to_rgba((*C.uint8_t)(unsafe.Pointer(&data[0])), (*C.uint8_t)(unsafe.Pointer(&rgbaData[0])), C.int(width), C.int(height), C.int(newWidth), C.int(newHeight))
-	fmt.Println("c done. imaging...")
-	img := &image.RGBA{
-		Pix:    rgbaData,
-		Stride: 4 * newWidth,
-		Rect:   image.Rect(0, 0, newWidth, newHeight),
-	}
-	fmt.Println("go done")
-	return img
-}
