@@ -31,7 +31,7 @@ cd ~
 git clone https://github.com/kercre123/vic.go
 cd vic-go
 sudo ./download-deps.sh
-COMPILE_WITH_JPEG=true ./compile.sh rc/rc.go
+./compile.sh rc/rc.go
 SEND_WEBROOT=true ./send.sh vectorip
 ```
 
@@ -50,6 +50,8 @@ cd /data/vic-go
 ```
 
 The default example will show the camera on the LCD, then do some body functions (recieving and transmitting).
+
+(LCD is currently broken in the example, i know)
 
 The remote control example will host a site at http://vectorip:8888/
 
