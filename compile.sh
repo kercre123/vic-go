@@ -6,6 +6,9 @@ COMPILEFILE="./main.go"
 
 if [[ $1 ]]; then
 	COMPILEFILE=$@
+	echo "Compiling $COMPILEFILE"
+else
+	echo "Compiling default example, because no file was provided..."
 fi
 
 ABSPATH="${PWD}"
@@ -25,6 +28,7 @@ fi
 
 mkdir -p build
 
+echo librobot.so
 ${TOOLCHAIN}g++ \
 -w -shared \
 -o build/librobot.so \
@@ -41,6 +45,7 @@ hacksrc/cam_demo.cpp \
 -Ilibjpeg-turbo/include \
 -std=c++11
 
+echo libjpeg_interface.so
 ${TOOLCHAIN}g++ \
 -w -shared \
 -o build/libjpeg_interface.so \
@@ -50,6 +55,7 @@ hacksrc/jpeg.cpp \
 -mcpu=cortex-a7 -flto -ffast-math \
 -std=c++11 -Ilibjpeg-turbo/include -fopenmp
 
+echo "libanki-camera.so"
 ${TOOLCHAIN}gcc \
 -shared \
 -o build/libanki-camera.so \
@@ -63,6 +69,7 @@ anki/platform/camera/vicos/camera_client/log.c \
 -fPIC -lpthread \
 -O3 -flto -ffast-math -mfpu=neon-vfpv4 -mfloat-abi=softfp
 
+echo $COMPILEFILE
 CC="${TOOLCHAIN}gcc -w -Lbuild" \
 CGO_CFLAGS="-Iinclude -O3 -mfpu=neon-vfpv4 -mfloat-abi=softfp -mcpu=cortex-a7 -ffast-math -flto -Ilibjpeg-turbo/include" \
 CGO_LDFLAGS="-ldl" \
