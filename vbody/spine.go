@@ -140,9 +140,7 @@ func Start_Comms_Loop() error {
 			}
 			var motors []int16 = []int16{Motor_1, Motor_2, Motor_3, Motor_4}
 			var leds []uint32 = []uint32{BackLEDStatus, MiddleLEDStatus, FrontLEDStatus, FrontLEDStatus}
-			CurrentDataFrame.mu.Lock()
 			C.spine_full_update(C.uint32_t(8888), (*C.int16_t)(&motors[0]), (*C.uint32_t)(&leds[0]))
-			CurrentDataFrame.mu.Unlock()
 			time.Sleep(time.Millisecond * 10)
 		}
 	}()
