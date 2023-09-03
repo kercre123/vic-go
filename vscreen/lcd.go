@@ -96,6 +96,86 @@ func CreateTextImage(text string) []uint16 {
 	return pixels
 }
 
+func CreateTextImageFromSlice(lines []string) []uint16 {
+	const W, H = 184, 96
+	img := image.NewRGBA(image.Rect(0, 0, W, H))
+	black := color.RGBA{0, 0, 0, 255}
+	white := color.RGBA{255, 255, 255, 255}
+
+	draw.Draw(img, img.Bounds(), &image.Uniform{black}, image.Point{}, draw.Src)
+
+	d := &font.Drawer{
+		Dst:  img,
+		Src:  &image.Uniform{white},
+		Face: basicfont.Face7x13,
+		Dot:  fixed.P(0, 13),
+	}
+
+	//fmt.Println(13 * fixed.I(13))
+
+	// Wrap text
+	for _, line := range lines {
+		d.Dot.X = 0
+		d.DrawString(line)
+		d.Dot.Y += fixed.I(13) // move down for the next line
+	}
+
+	pixels := make([]uint16, W*H)
+	for y := 0; y < H; y++ {
+		for x := 0; x < W; x++ {
+			r, g, b, _ := img.At(x, y).RGBA()
+			// Convert the color format from RGBA to RGB565
+			pixel := (r>>8&0xF8)<<8 | (g>>8&0xFC)<<3 | b>>8>>3
+			pixels[y*W+x] = uint16(pixel)
+		}
+	}
+
+	return pixels
+}
+
+type Line struct {
+	Text  string
+	Color color.Color
+}
+
+func CreateTextImageFromLines(lines []Line) []uint16 {
+	const W, H = 184, 96
+	img := image.NewRGBA(image.Rect(0, 0, W, H))
+	black := color.RGBA{0, 0, 0, 255}
+	white := color.RGBA{255, 255, 255, 255}
+
+	draw.Draw(img, img.Bounds(), &image.Uniform{black}, image.Point{}, draw.Src)
+
+	d := &font.Drawer{
+		Dst:  img,
+		Src:  &image.Uniform{white},
+		Face: basicfont.Face7x13,
+		Dot:  fixed.P(0, 13),
+	}
+
+	//fmt.Println(13 * fixed.I(13))
+
+	// Wrap text
+	for _, line := range lines {
+		d.Src = &image.Uniform{line.Color}
+		d.Dot.X = 0
+		d.DrawString(line.Text)
+		d.Dot.Y += fixed.I(13) // move down for the next line
+	}
+
+	pixels := make([]uint16, W*H)
+	for y := 0; y < H; y++ {
+		for x := 0; x < W; x++ {
+			r, g, b, _ := img.At(x, y).RGBA()
+			// Convert the color format from RGBA to RGB565
+			pixel := (r>>8&0xF8)<<8 | (g>>8&0xFC)<<3 | b>>8>>3
+			pixels[y*W+x] = uint16(pixel)
+		}
+	}
+
+	return pixels
+}
+
 func SetScreen(pixels []uint16) {
 	if !ScreenInitted {
 		fmt.Println("SetScreen(): init screen first")
