@@ -1,13 +1,15 @@
 #!/bin/bash
 
-set -e
+
 
 if [[ ! $1 ]]; then
 	echo "You must provide an IP"
 	exit 1
 fi
 
-ssh -i ~/ssh_root_key root@$1 "mount -o rw,remount / && mount -o rw,remount,exec /data && mkdir -p /data/vic-go"
+ssh -i ~/ssh_root_key root@$1 "mount -o rw,remount / && mount -o rw,remount,exec /data"
+set -e
+ssh -i ~/ssh_root_key root@$1 "mkdir -p /data/vic-go"
 scp $2 -i ~/ssh_root_key build/main root@$1:/data/vic-go/
 if [[ ! $NO_LIBS ]]; then
 scp $2 -i ~/ssh_root_key build/librobot.so root@$1:/lib/
