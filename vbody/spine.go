@@ -67,11 +67,10 @@ var FrontLEDStatus uint32 = LED_OFF
 var MiddleLEDStatus uint32 = LED_OFF
 var BackLEDStatus uint32 = LED_OFF
 
-// returns a handle for debugging, though the cpp should now handle it on its own
-func Init_Spine() int {
+func Init_Spine() error {
 	if Spine_Initiated {
 		fmt.Println("Spine already initiated, handle " + fmt.Sprint(Spine_Handle))
-		return Spine_Handle
+		return nil
 	}
 	handle := C.spine_full_init()
 	if handle > 0 {
@@ -80,14 +79,14 @@ func Init_Spine() int {
 		if err != nil {
 			fmt.Println("error initializing spine. is vic-robot still alive?")
 			Spine_Initiated = false
-			panic(err)
+			return err
 		}
 	} else {
 		Spine_Initiated = false
 		fmt.Println("error initializing spine. is vic-robot still alive?")
-		panic(errors.New("spine handle is 0"))
+		return errors.New("spine handle is 0")
 	}
-	return int(handle)
+	return nil
 }
 
 func Close_Spine() {

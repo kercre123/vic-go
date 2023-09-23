@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"image/color"
 	"os"
@@ -180,18 +181,39 @@ func StartAnki_Confirm() {
 }
 
 func StartAnki() {
-	scrnData := vscreen.CreateTextImage("Stopping body...")
+	scrnData := vscreen.CreateTextImage("To go back to the recovery menu, go to CCIS and select `BACK TO MENU`. Starting in 3 seconds...")
 	vscreen.SetScreen(scrnData)
-	StopListening = true
+	time.Sleep(time.Second * 4)
+	scrnData = vscreen.CreateTextImage("Stopping body...")
+	vscreen.SetScreen(scrnData)
+	CurrentList.inited = false
 	time.Sleep(time.Second / 3)
 	vbody.Close_Spine()
 	scrnData = vscreen.CreateTextImage("Starting anki-robot.target...")
 	vscreen.SetScreen(scrnData)
 	vscreen.StopLCD()
+	ScreenInited = false
+	BodyInited = false
 	time.Sleep(time.Second / 2)
 	exec.Command("/bin/bash", "-c", "systemctl start anki-robot.target").Run()
-	fmt.Println("exiting")
-	os.Exit(0)
+	// watch logcat for clear user data screen
+	cmd := exec.Command("logcat", "-T", "1")
+	stdout, _ := cmd.StdoutPipe()
+	cmd.Start()
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+		//09-17 15:51:52.178  2040  2040 D vic-anim: [@FaceInfoScreenManager] FaceInfoScreenManager.SetScreen.EnteringScreen: (tc5185) : 5
+		if strings.Contains(line, "FaceInfoScreenManager.SetScreen.EnteringScreen") {
+			if strings.Contains(line, " : 5") {
+				break
+			}
+		}
+	}
+	exec.Command("/bin/bash", "-c", "systemctl stop anki-robot.target").Run()
+	time.Sleep(time.Second)
+	CurrentList = Recovery_Create()
+	CurrentList.Init()
 }
 
 func StartRescue_Confirm() {
@@ -343,7 +365,7 @@ func PrintBodyInfo() {
 	HangBody = true
 	time.Sleep(time.Second / 3)
 	for {
-		time.Sleep(time.Millisecond * 50)
+		time.Sleep(time.Millisecond * 3)
 		frame := vbody.GetFrame()
 		if frame.ButtonState {
 			break
@@ -353,8 +375,8 @@ func PrintBodyInfo() {
 			"TEMP: H-" + GetHeadTemp() + "C, B-" + fmt.Sprint(frame.BodyTemp) + "C",
 			"TOUCH: " + fmt.Sprint(frame.Touch),
 			"CLIFF: " + fmt.Sprint(frame.Cliffs[0]) + " " + fmt.Sprint(frame.Cliffs[1]) + " " + fmt.Sprint(frame.Cliffs[2]) + " " + fmt.Sprint(frame.Cliffs[3]),
-			" ",
-			" ",
+			"DIST:" + fmt.Sprint(frame.ProxAmbient) + " " + fmt.Sprint(frame.ProxCalibResult) + " " + fmt.Sprint(frame.ProxRawRangeMM) + " " + fmt.Sprint(frame.ProxSPADCount),
+			fmt.Sprint(frame.ProxSampleCount) + " " + fmt.Sprint(frame.ProxSigmaMM) + " " + fmt.Sprint(frame.ProxSignalRateMCPS),
 			"> Back",
 		}
 		scrnData := vscreen.CreateTextImageFromSlice(lines)
@@ -377,7 +399,7 @@ func Recovery_Create() *List {
 	Test.Info = "Recovery Menu"
 	Test.InfoColor = color.RGBA{0, 255, 0, 255}
 
-	Test.ClickFunc = []func(){StartAnki_Confirm, StartRescue_Confirm, PrintNetworkInfo, Rebooter, Restore16}
+	Test.ClickFunc = []func(){StartAnki_Confirm, PrintBodyInfo, PrintNetworkInfo, Rebooter, Restore16}
 
 	Test.Lines = []vscreen.Line{
 		{
@@ -385,11 +407,11 @@ func Recovery_Create() *List {
 			Color: color.RGBA{255, 255, 255, 255},
 		},
 		{
-			Text:  "Start vic-rescue",
+			Text:  "Print sensor info",
 			Color: color.RGBA{255, 255, 255, 255},
 		},
 		{
-			Text:  "List network info",
+			Text:  "Print network info",
 			Color: color.RGBA{255, 255, 255, 255},
 		},
 		{
@@ -430,7 +452,24 @@ func Confirm_Create(do func(), origList List) *List {
 	return &Test
 }
 
+func TestIfBodyWorking() {
+	// if body isn't working, start vic-rescue
+	err := vbody.Init_Spine()
+	if err != nil {
+		vscreen.InitLCD()
+		vscreen.BlackOut()
+		data := vscreen.CreateTextImage("Error! Not able to communicate with the body. Exiting program.")
+		vscreen.SetScreen(data)
+		vbody.Close_Spine()
+		vscreen.StopLCD()
+		os.Exit(0)
+	} else {
+		BodyInited = true
+	}
+}
+
 func main() {
+	TestIfBodyWorking()
 	CurrentList = Recovery_Create()
 	CurrentList.Init()
 	fmt.Println("started")
